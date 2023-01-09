@@ -41,7 +41,7 @@ void setup() {
 void loop() {
   
   // Detecting the nearby object to open the lid 
-  digitalWrite(trigPin2,LOW);
+  digitalWrite(trigPin1,LOW);
   delayMicroseconds(2);
   digitalWrite(trigPin1, HIGH); 
   delayMicroseconds(10);
