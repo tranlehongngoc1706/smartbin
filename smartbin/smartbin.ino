@@ -12,7 +12,7 @@ const int echoPin1 = 6;
 const int trigPin2 = 10;
 const int echoPin2 = 13;
 
-// LED pins
+// LED pin
 const int REDPin = 2;
 
 // Lcd screen
@@ -35,7 +35,7 @@ void setup() {
   pinMode(REDPin,OUTPUT);
 
 
-  // myservo.attach(9);
+  myservo.attach(9);
 }
 
 void loop() {
