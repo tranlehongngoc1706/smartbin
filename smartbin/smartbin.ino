@@ -1,100 +1,100 @@
-#include <LiquidCrystal.h>
 #include <Servo.h>
+Servo myServo; // define servo.
 
-// 1: ultrasonic sensor for detecting the nearby object to open the lid 
-// 2: ultrasonic sensor for measuring the trash's height inside the bin
+// 1: ultrasonic sensor that is used to measure the amount of trash inside.
+// 2: ultrasonic sensor that is used to detect the trash in front of the trash can.
+#define ECHOPIN1 13
+#define TRIGPIN1 12
+#define ECHOPIN2 11
+#define TRIGPIN2 10
 
-Servo myservo;
+// The LEDs that represent the trash level. More lights will be on when the trash is higher.
+#define LED1 7
+#define LED2 6
+#define LED3 5
+#define LED4 4
+#define LED5 3
 
-// ultrasonic sensors' pins
-const int trigPin1 = 5;
-const int echoPin1 = 6;
-const int trigPin2 = 10;
-const int echoPin2 = 13;
-
-// LED pin
-const int REDPin = 2;
-
-// Lcd screen
-// LiquidCrystal lcd(12, 11,8, 7, 4, 3);
-
-// define variables
-long duration1, duration2;
-int distance1, distance2;
-int trashCanHeight = 25;
+// duration is what the ultrasonic sensor receive, by using that we can measure the distance.
+long duration1, distance1;
+long duration2, distance2;
 
 void setup() {
-  Serial.begin(9600); // starts the serial communication
+  // ultrasonic sensor 1 setup
+  Serial.begin(9600);
+  pinMode(ECHOPIN1, INPUT);
+  pinMode(TRIGPIN1, OUTPUT);
+  // LED setup
+  pinMode(LED1, OUTPUT);
+  pinMode(LED2, OUTPUT);
+  pinMode(LED3, OUTPUT);
+  pinMode(LED4, OUTPUT);
+  pinMode(LED5, OUTPUT);
 
-  // trigPin: OUTPUT, echoPin: INPUT
-  pinMode(trigPin1, OUTPUT);  
-  pinMode(trigPin2, OUTPUT);
-  pinMode(echoPin1, INPUT);  
-  pinMode(echoPin2, INPUT); 
-
-  pinMode(REDPin,OUTPUT);
-
-
-  myservo.attach(9);
+  // ultrasonic sensor 2 setup
+  myServo.attach(9); // servo on digital pin 9
+  pinMode(ECHOPIN2, INPUT);
+  pinMode(TRIGPIN2, OUTPUT);
 }
 
-void loop() {
-  
-  // Detecting the nearby object to open the lid 
-  digitalWrite(trigPin1,LOW);
+void loop() { 
+  // LED control
+  digitalWrite(TRIGPIN1, LOW);
   delayMicroseconds(2);
-  digitalWrite(trigPin1, HIGH); 
+  digitalWrite(TRIGPIN1, HIGH);
   delayMicroseconds(10);
-  digitalWrite(trigPin1, LOW);
-  duration1 = pulseIn(echoPin1, HIGH);
-  distance1 = int(duration1 *0.034/2);
 
-  // Measuring the trash's height inside the bin
-  // Clears the trigPin
-  digitalWrite(trigPin2,LOW);
-  delayMicroseconds(2);
+  digitalWrite(ECHOPIN1, LOW);
+  duration1 = pulseIn(ECHOPIN1, HIGH);
+  distance1 = int(duration1*0.0344/2);  // equation to measure the distance by using duration
+  // the trash can's height is 18cm
 
-  // Sets the trigPin on HIGH state for 10 micro seconds
-  digitalWrite(trigPin2,HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPin2,LOW);
-
-  // read the echoPin, returns the sound wave travel time in microseconds
-  duration2 = pulseIn(echoPin2,HIGH);
-
-  // Calculating the distance
-  distance2 = int(duration2*0.0344/2);
-
-  if (distance2 <= 5){
-    digitalWrite(REDPin,HIGH);
-    Serial.print("Distance: ");
-    Serial.println("Out of range");
-    // lcd.print("The trash can is ");
-    // lcd.print(((trashCanHeight-distance2)/trashCanHeight)*100); 
-    // lcd.println("% full");
-    // lcd.print("Please empty it!"); 
-    delay(1000);   
+  if (distance1 < 20) {
+    digitalWrite(LED1, 150);
   } else {
-    digitalWrite(REDPin,LOW);
-    // lcd.print("The trash can is ");
-    // lcd.print(((trashCanHeight-distance2)/trashCanHeight)*100); 
-    // lcd.println("% full"); 
-    // lcd.print("The trash can is available!");
-    delay(1000); 
-    // // Print the distance on the Serial Monitor
-    Serial.print("Distance: ");
-    Serial.print(distance2);
-    Serial.println("cm");
+    digitalWrite(LED1, 0);
+  }   
+
+  if (distance1 < 16) {
+    digitalWrite(LED2, 150);
+  } else {
+    digitalWrite(LED2, 0);
+  }
+    
+  if (distance1 < 12) {
+    digitalWrite(LED3, 150);
+  } else {
+    digitalWrite(LED3, 0);
+  }
+  if (distance1 < 8) {
+    digitalWrite(LED4, 150);
+  } else {
+    digitalWrite(LED4, 0);
+  }
+    
+  if (distance1 < 4) {
+    digitalWrite(LED5, 150);
+  } else {
+    digitalWrite(LED5, 0);
   }
 
- if (distance1 <= 50 && distance1 >= 0 && distance2 > 5) 
-  {	
-  myservo.write(50);    
-  delay(3000);
-  } else {		
-  myservo.write(160);
-  }  
-  
-delay(500);  
-// lcd.clear();
+  // Servo control
+  digitalWrite(TRIGPIN2, LOW);
+  delay(2);  
+  digitalWrite(TRIGPIN2, HIGH);
+  delayMicroseconds(10);  
+  digitalWrite(TRIGPIN2, LOW);  
+  duration2 = pulseIn(ECHOPIN2, HIGH);  
+  distance2 = int(duration2*0.0344/2);  // equation to measure the distance by using duration
+
+  // The lid will only be open when there is trash in front of the trash can and there is space for more trash.
+  if (distance2 < 30) {
+    if (distance1 > 4) {
+      myServo.write(180);  // Turn Servo to open the lid
+      delay(3000); // Wait for the user to put trash in 
+    }
+  } else {
+     myServo.write(0); // Close the lid
+     delay(50);
+  }
 }
